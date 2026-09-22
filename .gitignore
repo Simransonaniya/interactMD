@@ -1,0 +1,58 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+backend/node_modules/
+dist/
+dist-ssr/
+backend/dist/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+chatbot_backend/.env
+backend/.env
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# SQLite & local DB data
+*.db
+*.sqlite
+*.sqlite3
+interactmd.db
+chatbot_backend/interactmd.db
+
+# PostgreSQL local data
+pgdata/
+interactmd_postgres_data/
