@@ -10,9 +10,11 @@ lerna-debug.log*
 # Dependencies
 node_modules/
 backend/node_modules/
+frontend/node_modules/
 dist/
 dist-ssr/
 backend/dist/
+frontend/dist/
 *.local
 
 # Editor directories and files
@@ -34,12 +36,12 @@ __pycache__/
 *.pyo
 *.pyd
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+chatbot/.env
 chatbot_backend/.env
 backend/.env
+frontend/.env
+frontend/.env.local
 .venv/
 venv/
 env/
@@ -51,6 +53,7 @@ env/
 *.sqlite
 *.sqlite3
 interactmd.db
+chatbot/interactmd.db
 chatbot_backend/interactmd.db
 
 # PostgreSQL local data
