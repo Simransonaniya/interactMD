@@ -4,11 +4,17 @@ import {
   Plus, 
   FileEdit,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Play
 } from 'lucide-react';
 import { fetchCases, getAuthHeaders, API_BASE_URL } from '../services/apiClient';
+import { ClinicalCase } from '../types/clinical';
 
-export const AdminCMS: React.FC = () => {
+interface AdminCMSProps {
+  onStartCase?: (c: ClinicalCase) => void;
+}
+
+export const AdminCMS: React.FC<AdminCMSProps> = ({ onStartCase }) => {
   const [selectedWorkflowStage, setSelectedWorkflowStage] = useState<string>('All');
   const [isCreatingDraft, setIsCreatingDraft] = useState(false);
   const [cases, setCases] = useState<any[]>([]);
@@ -321,6 +327,7 @@ export const AdminCMS: React.FC = () => {
                   <th className="px-5 py-3.5">Specialty</th>
                   <th className="px-5 py-3.5">Difficulty</th>
                   <th className="px-5 py-3.5">Status</th>
+                  <th className="px-5 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#39605B]/10 text-[#1A2928]">
@@ -330,7 +337,7 @@ export const AdminCMS: React.FC = () => {
                       <span className="font-bold text-[#1A2928] block text-xs">{c.title}</span>
                       <span className="text-[10px] text-[#1A2928]/50 font-mono">{c.id}</span>
                     </td>
-                    <td className="px-5 py-4">{c.patient.name} ({c.patient.age}y {c.patient.gender})</td>
+                    <td className="px-5 py-4">{c.patient?.name || 'Patient'} ({c.patient?.age || 45}y {c.patient?.gender || 'Unknown'})</td>
                     <td className="px-5 py-4">
                       <span className="px-2.5 py-0.5 rounded-full bg-[#14302F] text-[#F2D7B8] font-semibold text-[10px]">{c.specialty}</span>
                     </td>
@@ -339,6 +346,17 @@ export const AdminCMS: React.FC = () => {
                       <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
                         Published
                       </span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      {onStartCase && (
+                        <button
+                          onClick={() => onStartCase(c)}
+                          className="px-3 py-1.5 rounded-full bg-[#F2D7B8] hover:bg-[#F8E9D7] text-[#1A2928] font-bold text-[11px] inline-flex items-center space-x-1 transition-all cursor-pointer shadow-2xs"
+                        >
+                          <Play className="w-3 h-3 fill-[#1A2928]" />
+                          <span>Test Case</span>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

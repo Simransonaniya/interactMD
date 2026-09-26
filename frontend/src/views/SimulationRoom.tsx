@@ -118,17 +118,61 @@ export const SimulationRoom: React.FC<SimulationRoomProps> = ({
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, mobileWorkspaceView, isTyping]);
 
-  // Voice toggle simulation
+  // Synchronous submission lock to prevent duplicate/concatenated requests
+  const isSubmittingRef = useRef(false);
+
+  // Voice toggle & real browser SpeechRecognition integration
+  const recognitionRef = useRef<any>(null);
+
   const toggleVoiceMode = () => {
-    setIsVoiceActive(!isVoiceActive);
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setIsVoiceActive(!isVoiceActive);
+      return;
+    }
+
+    if (isVoiceActive) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
+      setIsVoiceActive(false);
+    } else {
+      try {
+        const rec = new SpeechRecognition();
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.lang = 'en-US';
+        rec.onstart = () => setIsVoiceActive(true);
+        rec.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript) {
+            setInputText('');
+            handleSendMessage(transcript);
+          }
+        };
+        rec.onerror = () => setIsVoiceActive(false);
+        rec.onend = () => setIsVoiceActive(false);
+        rec.start();
+        recognitionRef.current = rec;
+      } catch (err) {
+        console.warn('[Voice Recognition]', err);
+        setIsVoiceActive(!isVoiceActive);
+      }
+    }
   };
 
   // Send message handler with async AI patient backend
   const handleSendMessage = async (textToSend?: string) => {
-    const text = (textToSend || inputText).trim();
-    if (!text || isTyping) return;
+    if (isSubmittingRef.current) return;
 
+    const text = (textToSend !== undefined ? textToSend : inputText).trim();
+    if (!text) return;
+
+    // Immediately acquire lock and clear input state to prevent any concatenation
+    isSubmittingRef.current = true;
+    setInputText('');
     setErrorMessage(null);
+
     const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const studentMessage: ChatMessage = {
@@ -141,7 +185,6 @@ export const SimulationRoom: React.FC<SimulationRoomProps> = ({
 
     const newHistory = [...messages, studentMessage];
     setMessages(newHistory);
-    if (!textToSend) setInputText('');
     setIsTyping(true);
 
     try {
@@ -173,6 +216,7 @@ export const SimulationRoom: React.FC<SimulationRoomProps> = ({
       setMessages(prev => [...prev, errorSystemMessage]);
     } finally {
       setIsTyping(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -194,24 +238,26 @@ export const SimulationRoom: React.FC<SimulationRoomProps> = ({
   // Perform Physical Exam via backend
   const handlePerformExam = async (exam: PhysicalFinding) => {
     if (performedExamIds.includes(exam.id)) return;
-    setPerformedExamIds(prev => [...prev, exam.id]);
     
     try {
       const finding = await performPhysicalExam(sessionId, caseData.id, exam.id, exam.system);
+      setPerformedExamIds(prev => [...prev, exam.id]);
       const examMsg: ChatMessage = {
         id: `msg-${Date.now()}-sys`,
         sender: 'system',
-        text: `[Physical Examination] ${finding.system || exam.system} — ${finding.finding || exam.name}: ${finding.value || exam.findingDescription}`,
+        text: `[Physical Examination] ${finding.system || exam.system} — ${finding.finding || exam.name}: ${finding.value || 'Normal findings.'}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         category: 'Exam'
       };
       setMessages(prev => [...prev, examMsg]);
     } catch (err: any) {
-      console.warn('[Exam Fallback]', err);
+      console.error('[Exam Error]', err);
+      const errText = err.message || 'Unable to connect to the simulation server to perform physical examination.';
+      setErrorMessage(errText);
       const examMsg: ChatMessage = {
-        id: `msg-${Date.now()}-sys`,
+        id: `msg-${Date.now()}-err`,
         sender: 'system',
-        text: `[Physical Examination] ${exam.system} — ${exam.name}: ${exam.findingDescription}`,
+        text: `⚠️ [Simulation Server Error]: ${errText}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         category: 'Exam'
       };
@@ -222,24 +268,26 @@ export const SimulationRoom: React.FC<SimulationRoomProps> = ({
   // Order Investigation via backend
   const handleOrderInvestigation = async (inv: InvestigationResult) => {
     if (orderedInvestigationIds.includes(inv.id)) return;
-    setOrderedInvestigationIds(prev => [...prev, inv.id]);
 
     try {
       const result = await orderInvestigation(sessionId, caseData.id, inv.id);
+      setOrderedInvestigationIds(prev => [...prev, inv.id]);
       const invMsg: ChatMessage = {
         id: `msg-${Date.now()}-sys`,
         sender: 'system',
-        text: `[STAT Diagnostic Ordered] ${result.name || inv.name} returned: ${result.result || result.interpretation || inv.interpretation}`,
+        text: `[STAT Diagnostic Ordered] ${result.name || inv.name} returned: ${result.result || result.interpretation || 'Completed'}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         category: 'Investigation'
       };
       setMessages(prev => [...prev, invMsg]);
     } catch (err: any) {
-      console.warn('[Investigation Fallback]', err);
+      console.error('[Investigation Error]', err);
+      const errText = err.message || 'Unable to connect to the simulation server to order diagnostic test.';
+      setErrorMessage(errText);
       const invMsg: ChatMessage = {
-        id: `msg-${Date.now()}-sys`,
+        id: `msg-${Date.now()}-err`,
         sender: 'system',
-        text: `[STAT Diagnostic Ordered] ${inv.name} returned: ${inv.interpretation}`,
+        text: `⚠️ [Simulation Server Error]: ${errText}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         category: 'Investigation'
       };
@@ -530,7 +578,10 @@ export const SimulationRoom: React.FC<SimulationRoomProps> = ({
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSendMessage();
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
               }}
               className="flex-1 py-2 sm:py-2.5 px-3.5 sm:px-4 rounded-full border border-[#39605B]/20 text-base sm:text-xs md:text-sm text-[#1A2928] focus:outline-none focus:ring-2 focus:ring-[#39605B] bg-[#F7F4EE]/40"
             />

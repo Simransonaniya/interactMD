@@ -12,7 +12,8 @@ import {
   ShieldCheck, 
   Eye, 
   EyeOff,
-  Hospital
+  Hospital,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -158,6 +159,48 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 Create Account
               </button>
             </div>
+
+            {/* 1-Click Demo Role Logins */}
+            {mode === 'login' && (
+              <div className="mb-5 p-3 rounded-2xl bg-[#14302F]/60 border border-[#39605B]/40 space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F2D7B8] flex items-center space-x-1">
+                  <Sparkles className="w-3 h-3 text-[#F2D7B8]" />
+                  <span>1-Click Quick Demo Logins:</span>
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('alex.morgan@medschool.edu');
+                      setPassword('password123');
+                    }}
+                    className="py-1.5 px-2 rounded-xl bg-[#102528] hover:bg-[#1A3F3D] border border-[#39605B]/50 text-[#F7F4EE] text-[10.5px] font-semibold text-left transition-all cursor-pointer truncate"
+                  >
+                    🩺 Student Alex
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('sarah.chen@medschool.edu');
+                      setPassword('password123');
+                    }}
+                    className="py-1.5 px-2 rounded-xl bg-[#102528] hover:bg-[#1A3F3D] border border-[#39605B]/50 text-[#F7F4EE] text-[10.5px] font-semibold text-left transition-all cursor-pointer truncate"
+                  >
+                    👩‍⚕️ Faculty Sarah
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('admin@interactmd.com');
+                      setPassword('adminpassword123');
+                    }}
+                    className="py-1.5 px-2 rounded-xl bg-[#102528] hover:bg-[#1A3F3D] border border-[#39605B]/50 text-[#F7F4EE] text-[10.5px] font-semibold text-left transition-all cursor-pointer truncate"
+                  >
+                    ⚙️ Admin
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Error & Success Feedback Banners */}
             {errorMsg && (

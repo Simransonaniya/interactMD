@@ -2,38 +2,34 @@
 
 This document details the complete end-to-end REST API integration connecting the **React/Vite Frontend** to the **FastAPI AI Virtual-Patient Backend** powered by **MongoDB Atlas** and **Hugging Face**.
 
----
+--## 1. System Architecture & Live Endpoints
 
-## 1. System Architecture
+- **Live Main Backend:** `https://interactmd-backend.onrender.com`
+- **Live AI Chatbot Backend:** `https://interactmdchatbot-1.onrender.com`
 
 ```text
 ┌────────────────────────────────────────────────────────┐
 │               React + Vite Frontend                   │
 │        (http://localhost:5173 / localhost:5174)        │
-└─────────────────────────┬──────────────────────────────┘
-                          │ HTTP REST API (JSON)
-                          ▼
-┌────────────────────────────────────────────────────────┐
-│             FastAPI Python Chatbot Backend             │
-│                 (http://localhost:8001)                │
-├────────────────────────────────────────────────────────┤
-│ • AI Orchestrator & Safety Validator                  │
-│ • Intent Classifier (OPQRST / ROS / Negative / Jargon) │
-│ • Tri-State Fact Retriever & Progressive Controller    │
-│ • Physical Examination & Diagnostic Testing Engines    │
-│ • Clinical Submission & 5-Dimension OSCE Evaluator     │
 └──────────────┬──────────────────────────┬──────────────┘
                │                          │
                ▼                          ▼
-┌───────────────────────────┐ ┌──────────────────────────┐
-│       MongoDB Atlas       │ │     Hugging Face LLM     │
-│  (Database: `interactmd`) │ │(Conversational Phrasing) │
-│ • Cases (Source of Truth) │ └──────────────────────────┘
-│ • Sessions & Messages     │
-│ • Interaction Events      │
-│ • OSCE Evaluations        │
-│ • User Accounts           │
-└───────────────────────────┘
+┌──────────────────────────────┐ ┌──────────────────────────────┐
+│       Main Backend API       │ │  FastAPI AI Chatbot Backend  │
+│(interactmd-backend.onrender) │ │(interactmdchatbot-1.onrender)│
+├──────────────────────────────┤ ├──────────────────────────────┤
+│ • User Auth & Cases Library  │ │ • AI Patient Conversation    │
+│ • Clinical Sessions & State  │ │ • Progressive Fact Retriever │
+│ • OSCE Evaluation Engine     │ │ • Physical Exam & Labs Tests │
+└──────────────┬───────────────┘ └──────────────┬───────────────┘
+               │                                │
+               └───────────────┬────────────────┘
+                               │
+                               ▼
+               ┌───────────────────────────────┐
+               │         MongoDB Atlas         │
+               │    (Database: `interactmd`)   │
+               └───────────────────────────────┘
 ```
 
 ---
@@ -42,28 +38,28 @@ This document details the complete end-to-end REST API integration connecting th
 
 ### Frontend (`frontend/.env`)
 ```env
-VITE_API_BASE_URL=http://localhost:8001
+VITE_API_BASE_URL=https://interactmd-backend.onrender.com
+VITE_CHATBOT_API_URL=https://interactmdchatbot-1.onrender.com
 ```
 
 ### Backend (`chatbot/.env`)
 ```env
 APP_NAME=InteractMD
-ENVIRONMENT=development
-DEBUG=true
+ENVIRONMENT=production
+DEBUG=false
 
-DATABASE_URL=sqlite:///./interactmd.db
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.oubgq77.mongodb.net/interactmd?retryWrites=true&w=majority&appName=Cluster0
+DATABASE_URL=mongodb+srv://<user>:<password>@cluster0.oubgq77.mongodb.net/interactmd?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.oubgq77.mongodb.net/interactmd?retryWrites=true&w=majority&appName=Cluster0
 MONGODB_DB_NAME=interactmd
 
 JWT_SECRET_KEY=CHANGE_THIS_SECRET_KEY_FOR_PRODUCTION_INTERACTMD_2026
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 
-CORS_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:5174
+CORS_ORIGINS=http://localhost:5173,http://localhost:5174,https://interactmdchatbot-1.onrender.com,https://interactmd-backend.onrender.com
 
 LLM_PROVIDER=huggingface
 HF_TOKEN=hf_**********************************
-HF_MODEL=meta-llama/Meta-Llama-3-8B-Instruct
 ```
 
 ---

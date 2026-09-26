@@ -11,7 +11,8 @@ import {
   BookOpen,
   ChevronRight,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Download
 } from 'lucide-react';
 import { ClinicalCase } from '../types/clinical';
 import { fetchCases } from '../services/apiClient';
@@ -142,6 +143,29 @@ export const EducatorAnalytics: React.FC<EducatorAnalyticsProps> = ({ onStartCas
     }
   ];
 
+  const handleExportCSV = () => {
+    const headers = ["ID", "Name", "Email", "Cases Completed", "Average Score", "Status", "Identified Weak Area", "Last Active"];
+    const rows = students.map(s => [
+      s.id,
+      `"${s.name}"`,
+      `"${s.email}"`,
+      s.casesCompleted,
+      `${s.avgScore}%`,
+      `"${s.status}"`,
+      `"${s.weakArea}"`,
+      `"${s.lastActive}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `InteractMD_Cohort_Analytics_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Cohort OSCE analytics exported successfully to CSV!");
+  };
+
   const handleConfirmAssignment = () => {
     const matched = availableCases.find(c => c.id === selectedCaseToAssign);
     const caseTitle = matched ? matched.title : 'Selected OSCE Case';
@@ -208,6 +232,15 @@ export const EducatorAnalytics: React.FC<EducatorAnalyticsProps> = ({ onStartCas
           >
             <Send className="w-3.5 h-3.5 text-[#1A2928]" />
             <span>Assign Case</span>
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2.5 rounded-full border border-[#39605B]/30 text-xs font-semibold text-[#1A2928] hover:bg-white flex items-center space-x-1.5 transition-all cursor-pointer shadow-xs"
+            title="Export full class metrics to CSV spreadsheet"
+          >
+            <Download className="w-3.5 h-3.5 text-[#39605B]" />
+            <span className="hidden sm:inline">Export</span> CSV
           </button>
 
           {onExploreLibrary && (

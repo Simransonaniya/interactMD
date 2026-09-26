@@ -11,7 +11,9 @@ import {
   MessageSquare, 
   FileText, 
   ShieldCheck,
-  Stethoscope
+  Stethoscope,
+  Printer,
+  LayoutDashboard
 } from 'lucide-react';
 import { ClinicalCase, EvaluationResult, ChatMessage } from '../types/clinical';
 
@@ -30,6 +32,7 @@ export const EvaluationView: React.FC<EvaluationViewProps> = ({
   chatMessages,
   onRetry,
   onNextCase,
+  onBackToDashboard,
 }) => {
   useEffect(() => {
     if (evaluation.overallScore >= 75) {
@@ -82,21 +85,40 @@ export const EvaluationView: React.FC<EvaluationViewProps> = ({
               {clinicalCase.title} • {clinicalCase.specialty}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs text-[#1A2928]/60 font-medium pt-2">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs text-[#1A2928]/60 font-medium pt-2">
               <div className="flex items-center space-x-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#39605B]" />
                 <span>Encounter Duration: <strong className="text-[#1A2928]">{formatSeconds(evaluation.durationSeconds)}</strong></span>
               </div>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <div className="flex items-center space-x-1.5">
                 <MessageSquare className="w-3.5 h-3.5 text-[#39605B]" />
                 <span>Questions Asked: <strong className="text-[#1A2928]">{evaluation.questionsAskedCount}</strong></span>
               </div>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <div className="flex items-center space-x-1.5">
                 <Stethoscope className="w-3.5 h-3.5 text-[#39605B]" />
                 <span>Exams Performed: <strong className="text-[#1A2928]">{evaluation.examsPerformedCount}</strong></span>
               </div>
+            </div>
+
+            {/* Quick action bar */}
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <button
+                onClick={() => window.print()}
+                className="px-3.5 py-1.5 rounded-full border border-[#39605B]/30 hover:border-[#39605B] text-[#1A2928] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer bg-white hover:bg-[#F7F4EE]"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#39605B]" />
+                <span>Print / Save OSCE Report</span>
+              </button>
+
+              <button
+                onClick={onBackToDashboard}
+                className="px-3.5 py-1.5 rounded-full border border-[#39605B]/30 hover:border-[#39605B] text-[#1A2928] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer bg-white hover:bg-[#F7F4EE]"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 text-[#39605B]" />
+                <span>Learner Dashboard</span>
+              </button>
             </div>
           </div>
 
