@@ -411,10 +411,10 @@ export async function sendPatientChatMessage(
   const empathyKeywords = ['sorry', 'understand', 'help', 'comfort', 'hear', 'worry', 'reassure', 'ease', 'listen', 'relax'];
   const isEmpathy = empathyKeywords.some(k => lowerMsg.includes(k));
 
-  // Try backend simulation / chatbot endpoints with timeout
+  // Try backend simulation / chatbot endpoints with generous timeout for LLM inference
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     if (sessionId) {
       try {
@@ -733,7 +733,7 @@ export async function submitEncounterEvaluation(
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
     const res = await fetchWithFallback(path, {
       method: 'POST',
